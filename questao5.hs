@@ -1,5 +1,5 @@
 import Text.Printf
-import Data.List (groupBy, sortBy)
+import Data.List (sortBy)
 import Data.Function (on)
 
 data Aluna = Aluna {
@@ -19,11 +19,22 @@ mediaCRAs alunas =
 mediaCRAsFormatada :: Float -> IO ()
 mediaCRAsFormatada media = printf "Media dos CRAs: %.2f\n\n" media
 
+myGroupBy :: (Eq b) => (a -> b) -> [a] -> [[a]]
+myGroupBy _ [] = []
+myGroupBy f (x:xs) =
+  let (same, rest) = span (\y -> f y == f x) xs
+  in (x:same) : myGroupBy f rest
+
+
+-- A função lambda \grp -> (cra (head grp), grp) cria uma tupla onde o primeiro elemento 
+-- é o CRA da primeira Aluna no grupo. 
+-- O segundo elemento é o grupo completo de Alunas que compartilham esse CRA.
+
 groupByCRA :: [Aluna] -> [(Float, [Aluna])]
-groupByCRA alunas = 
-  map (\grupo -> (cra (head grupo), grupo))
-  $ groupBy ((==) `on` cra)
-  $ sortBy (compare `on` cra) alunas
+groupByCRA alunas =
+  let sortedAlunas = sortBy (compare `on` cra) alunas
+  in map (\grp -> (cra (head grp), grp)) (myGroupBy cra sortedAlunas)
+
 
 gruposFormatados :: [(Float, [Aluna])] -> IO ()
 gruposFormatados grupos = mapM_ formatarGrupo grupos
